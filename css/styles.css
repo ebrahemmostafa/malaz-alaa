@@ -1641,3 +1641,20 @@ button {
   color: #a37561;
   font-weight: 500;
 }
+
+.footer__credits {
+  margin-top: 12px;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  opacity: 0.6;
+  text-transform: uppercase;
+}
+
+.footer__credits a {
+  text-decoration: underline;
+  transition: opacity 0.3s ease;
+}
+
+.footer__credits a:hover {
+  opacity: 1;
+}
