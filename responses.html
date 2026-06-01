@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Song Suggestions · Alaa Aldin &amp; Malaz</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --burgundy: oklch(0.38 0.08 5);
+      --gold: oklch(0.78 0.09 75);
+      --cream: oklch(0.97 0.015 75);
+      --ink: oklch(0.18 0.04 30);
+      --muted: oklch(0.5 0.04 30);
+      --surface: oklch(0.99 0.008 75);
+      --border: oklch(0.88 0.03 60);
+      --rose-light: oklch(0.95 0.025 10);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--cream);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    /* — Header — */
+    .header {
+      text-align: center;
+      padding: 4rem 2rem 2.5rem;
+      position: relative;
+    }
+    .header::after {
+      content: '';
+      display: block;
+      width: 60px;
+      height: 1px;
+      background: var(--gold);
+      margin: 1.5rem auto 0;
+    }
+    .header__eyebrow {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.65rem;
+      font-weight: 500;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+    }
+    .header__title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.2rem, 6vw, 3.5rem);
+      font-weight: 300;
+      color: var(--burgundy);
+      line-height: 1.1;
+    }
+    .header__sub {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.05rem;
+      color: var(--muted);
+      margin-top: 0.5rem;
+      font-style: italic;
+    }
+
+    /* — Stats row — */
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      padding: 2rem 1.5rem;
+      flex-wrap: wrap;
+    }
+    .stat {
+      text-align: center;
+    }
+    .stat__num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.8rem;
+      font-weight: 300;
+      color: var(--burgundy);
+      line-height: 1;
+    }
+    .stat__label {
+      font-size: 0.62rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 0.3rem;
+    }
+    .stat__divider {
+      width: 1px;
+      height: 48px;
+      background: var(--border);
+      align-self: center;
+    }
+
+    /* — Controls — */
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0 2rem 1.5rem;
+      max-width: 860px;
+      margin: 0 auto;
+      flex-wrap: wrap;
+    }
+    .controls__search {
+      flex: 1;
+      min-width: 180px;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 0.55rem 0.9rem;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.8rem;
+      background: var(--surface);
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .controls__search:focus { border-color: var(--burgundy); }
+    .controls__search::placeholder { color: var(--muted); }
+
+    .controls__sort {
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 0.55rem 0.75rem;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.8rem;
+      background: var(--surface);
+      color: var(--ink);
+      outline: none;
+      cursor: pointer;
+    }
+
+    .btn-clear {
+      border: 1px solid var(--burgundy);
+      background: transparent;
+      color: var(--burgundy);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.55rem 1rem;
+      border-radius: 2px;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .btn-clear:hover { background: var(--burgundy); color: #fff; }
+
+    /* — Grid — */
+    .grid-wrap {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 2rem 4rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1rem;
+    }
+
+    /* — Card — */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 1.2rem 1.3rem 1rem;
+      position: relative;
+      transition: border-color 0.2s, transform 0.2s;
+      animation: fadeUp 0.4s both;
+    }
+    .card:hover { border-color: var(--gold); transform: translateY(-2px); }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .card__index {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.75rem;
+      color: var(--gold);
+      margin-bottom: 0.6rem;
+      letter-spacing: 0.08em;
+    }
+    .card__song {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.25rem;
+      font-weight: 400;
+      color: var(--ink);
+      line-height: 1.35;
+      word-break: break-word;
+    }
+    .card__meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 0.8rem;
+    }
+    .card__time {
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+    .card__del {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--border);
+      font-size: 1rem;
+      line-height: 1;
+      transition: color 0.2s;
+      padding: 0;
+    }
+    .card__del:hover { color: var(--burgundy); }
+
+    /* — Empty state — */
+    .empty {
+      text-align: center;
+      padding: 4rem 2rem;
+      grid-column: 1 / -1;
+    }
+    .empty__icon {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.5rem;
+      color: var(--border);
+      margin-bottom: 1rem;
+    }
+    .empty__text {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.2rem;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    /* — Toast — */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--ink);
+      color: var(--cream);
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      padding: 0.65rem 1.5rem;
+      border-radius: 2px;
+      transition: transform 0.3s ease;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* — Footer — */
+    .footer {
+      border-top: 1px solid var(--border);
+      text-align: center;
+      padding: 1.5rem;
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .footer a { color: var(--burgundy); text-decoration: none; }
+
+    /* — Export button — */
+    .btn-export {
+      border: 1px solid var(--gold);
+      background: transparent;
+      color: var(--burgundy);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.55rem 1rem;
+      border-radius: 2px;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .btn-export:hover { background: var(--gold); color: #fff; }
+
+    /* — Confirm dialog — */
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .overlay.open { display: flex; }
+    .dialog {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 2rem 2.5rem;
+      text-align: center;
+      max-width: 320px;
+    }
+    .dialog__title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.4rem;
+      color: var(--burgundy);
+      margin-bottom: 0.5rem;
+    }
+    .dialog__text {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+    }
+    .dialog__btns { display: flex; gap: 0.75rem; justify-content: center; }
+    .dialog__cancel {
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      padding: 0.5rem 1.2rem;
+      border-radius: 2px;
+      cursor: pointer;
+    }
+    .dialog__confirm {
+      border: 1px solid var(--burgundy);
+      background: var(--burgundy);
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      padding: 0.5rem 1.2rem;
+      border-radius: 2px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 480px) {
+      .header { padding: 3rem 1.25rem 2rem; }
+      .grid-wrap { padding: 0 1.25rem 3rem; }
+      .controls { padding: 0 1.25rem 1.25rem; }
+      .stat__divider { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Delete confirm dialog -->
+  <div class="overlay" id="overlay">
+    <div class="dialog">
+      <p class="dialog__title">Remove this song?</p>
+      <p class="dialog__text">This action cannot be undone.</p>
+      <div class="dialog__btns">
+        <button class="dialog__cancel" id="cancel-del">keep it</button>
+        <button class="dialog__confirm" id="confirm-del">remove</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Header -->
+  <header class="header">
+    <p class="header__eyebrow">✦ Alaa Aldin &amp; Malaz · June 20, 2026 ✦</p>
+    <h1 class="header__title">Song Suggestions</h1>
+    <p class="header__sub">every note chosen with love</p>
+  </header>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat">
+      <div class="stat__num" id="stat-total">0</div>
+      <div class="stat__label">Suggestions</div>
+    </div>
+    <div class="stat__divider"></div>
+    <div class="stat">
+      <div class="stat__num" id="stat-today">0</div>
+      <div class="stat__label">Today</div>
+    </div>
+    <div class="stat__divider"></div>
+    <div class="stat">
+      <div class="stat__num" id="stat-days">19</div>
+      <div class="stat__label">Days to go</div>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <input class="controls__search" id="search" type="search" placeholder="Search songs or artists…" />
+    <select class="controls__sort" id="sort">
+      <option value="newest">Newest first</option>
+      <option value="oldest">Oldest first</option>
+      <option value="alpha">A → Z</option>
+    </select>
+    <button class="btn-export" id="btn-export">Export CSV</button>
+    <button class="btn-clear" id="btn-clear">Clear all</button>
+  </div>
+
+  <!-- Cards grid -->
+  <div class="grid-wrap">
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>made with love · <a href="index.html">← back to invitation</a></p>
+  </footer>
+
+  <script>
+    // ─── Storage key ───────────────────────────────────────────────────────────
+    // The playlist form in js/script.js must save with this EXACT key:
+    //   localStorage.setItem('wedding_songs', JSON.stringify(songs))
+    // Each entry: { song: "Title — Artist", timestamp: Date.now() }
+    // ───────────────────────────────────────────────────────────────────────────
+    const STORAGE_KEY = 'wedding_songs';
+
+    let songs = [];
+    let pendingDeleteIndex = null;
+
+    // ─── Load ───────────────────────────────────────────────────────────────────
+    function load() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        songs = raw ? JSON.parse(raw) : [];
+        if (!Array.isArray(songs)) songs = [];
+      } catch { songs = []; }
+    }
+
+    function save() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(songs));
+    }
+
+    // ─── Stats ──────────────────────────────────────────────────────────────────
+    function updateStats() {
+      document.getElementById('stat-total').textContent = songs.length;
+
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      const todayCount = songs.filter(s => new Date(s.timestamp) >= today).length;
+      document.getElementById('stat-today').textContent = todayCount;
+
+      const wedding = new Date('2026-06-20T20:00:00');
+      const now = new Date();
+      const diff = Math.ceil((wedding - now) / 86400000);
+      document.getElementById('stat-days').textContent = Math.max(0, diff);
+    }
+
+    // ─── Render ─────────────────────────────────────────────────────────────────
+    function formatTime(ts) {
+      if (!ts) return '';
+      const d = new Date(ts);
+      return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+           + ' · '
+           + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function render() {
+      const query = document.getElementById('search').value.toLowerCase().trim();
+      const sort  = document.getElementById('sort').value;
+
+      let filtered = songs.filter(s => s.song.toLowerCase().includes(query));
+
+      if (sort === 'newest')  filtered.sort((a,b) => b.timestamp - a.timestamp);
+      if (sort === 'oldest')  filtered.sort((a,b) => a.timestamp - b.timestamp);
+      if (sort === 'alpha')   filtered.sort((a,b) => a.song.localeCompare(b.song));
+
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div class="empty">
+            <div class="empty__icon">♩</div>
+            <p class="empty__text">${query ? 'No songs match your search.' : 'No suggestions yet — be the first!'}</p>
+          </div>`;
+        return;
+      }
+
+      filtered.forEach((item, i) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.style.animationDelay = Math.min(i * 0.04, 0.4) + 's';
+
+        // Find original index for deletion
+        const origIdx = songs.indexOf(item);
+
+        card.innerHTML = `
+          <div class="card__index">${String(i + 1).padStart(2, '0')}</div>
+          <div class="card__song">${escHtml(item.song)}</div>
+          <div class="card__meta">
+            <span class="card__time">${formatTime(item.timestamp)}</span>
+            <button class="card__del" data-idx="${origIdx}" title="Remove">✕</button>
+          </div>`;
+        grid.appendChild(card);
+      });
+
+      // Delete buttons
+      grid.querySelectorAll('.card__del').forEach(btn => {
+        btn.addEventListener('click', () => {
+          pendingDeleteIndex = parseInt(btn.dataset.idx);
+          document.getElementById('overlay').classList.add('open');
+        });
+      });
+    }
+
+    function escHtml(s) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ─── Events ─────────────────────────────────────────────────────────────────
+    document.getElementById('search').addEventListener('input', render);
+    document.getElementById('sort').addEventListener('change', render);
+
+    // Delete dialog
+    document.getElementById('cancel-del').addEventListener('click', () => {
+      document.getElementById('overlay').classList.remove('open');
+      pendingDeleteIndex = null;
+    });
+    document.getElementById('confirm-del').addEventListener('click', () => {
+      if (pendingDeleteIndex !== null) {
+        songs.splice(pendingDeleteIndex, 1);
+        save();
+        updateStats();
+        render();
+        showToast('Song removed');
+      }
+      document.getElementById('overlay').classList.remove('open');
+      pendingDeleteIndex = null;
+    });
+
+    // Clear all
+    document.getElementById('btn-clear').addEventListener('click', () => {
+      if (songs.length === 0) return;
+      pendingDeleteIndex = 'all';
+      document.getElementById('overlay').classList.add('open');
+    });
+    // Override confirm for clear-all
+    document.getElementById('confirm-del').addEventListener('click', () => {
+      // handled above — pendingDeleteIndex = 'all' falls through splice(null) harmlessly
+      if (pendingDeleteIndex === 'all') {
+        songs = [];
+        save();
+        updateStats();
+        render();
+        showToast('All suggestions cleared');
+        document.getElementById('overlay').classList.remove('open');
+        pendingDeleteIndex = null;
+      }
+    });
+
+    // Export CSV
+    document.getElementById('btn-export').addEventListener('click', () => {
+      if (songs.length === 0) { showToast('Nothing to export'); return; }
+      const rows = [['#', 'Song / Artist', 'Submitted at']];
+      songs.forEach((s, i) => {
+        rows.push([i + 1, s.song, s.timestamp ? new Date(s.timestamp).toISOString() : '']);
+      });
+      const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url; a.download = 'song-suggestions.csv'; a.click();
+      URL.revokeObjectURL(url);
+      showToast('CSV downloaded');
+    });
+
+    // ─── Toast ───────────────────────────────────────────────────────────────────
+    let toastTimer;
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    // ─── Poll for live updates ────────────────────────────────────────────────
+    // Re-renders automatically if a guest submits on another tab
+    setInterval(() => {
+      const prev = songs.length;
+      load();
+      if (songs.length !== prev) { updateStats(); render(); }
+    }, 3000);
+
+    // ─── Init ────────────────────────────────────────────────────────────────────
+    load();
+    updateStats();
+    render();
+  </script>
+</body>
+</html>

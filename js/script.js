@@ -293,6 +293,16 @@
     if (!form) return;
     form.addEventListener('submit', function (e) {
       e.preventDefault();
+      var input = form.querySelector('input[name="song"]');
+      var val = input ? input.value.trim() : '';
+      if (!val) return;
+
+      // Save to localStorage
+      var songs = [];
+      try { songs = JSON.parse(localStorage.getItem('wedding_songs') || '[]'); } catch (err) { songs = []; }
+      songs.push({ song: val, timestamp: Date.now() });
+      localStorage.setItem('wedding_songs', JSON.stringify(songs));
+
       btn.disabled = true;
       label.textContent = 'SENDING...';
       setTimeout(function () {
