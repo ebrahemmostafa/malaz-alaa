@@ -420,16 +420,45 @@
     let pendingDeleteIndex = null;
 
     // ─── Load ───────────────────────────────────────────────────────────────────
+    function normalizeSongs(value) {
+      if (!Array.isArray(value)) return [];
+
+      return value.reduce((list, item) => {
+        const song = typeof item === 'string'
+          ? item.trim()
+          : item && typeof item.song === 'string'
+            ? item.song.trim()
+            : '';
+        if (!song) return list;
+
+        const timestamp = item && Number.isFinite(Number(item.timestamp))
+          ? Number(item.timestamp)
+          : Date.now();
+        list.push({ song, timestamp });
+        return list;
+      }, []);
+    }
+
     function load() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
-        songs = raw ? JSON.parse(raw) : [];
-        if (!Array.isArray(songs)) songs = [];
+        songs = normalizeSongs(raw ? JSON.parse(raw) : []);
       } catch { songs = []; }
     }
 
     function save() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(songs));
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(songs));
+        return true;
+      } catch {
+        showToast('Could not save changes');
+        return false;
+      }
+    }
+
+    function refresh() {
+      updateStats();
+      render();
     }
 
     // ─── Stats ──────────────────────────────────────────────────────────────────
@@ -506,7 +535,12 @@
     }
 
     function escHtml(s) {
-      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function closeDialog() {
+      document.getElementById('overlay').classList.remove('open');
+      pendingDeleteIndex = null;
     }
 
     // ─── Events ─────────────────────────────────────────────────────────────────
@@ -515,19 +549,27 @@
 
     // Delete dialog
     document.getElementById('cancel-del').addEventListener('click', () => {
-      document.getElementById('overlay').classList.remove('open');
-      pendingDeleteIndex = null;
+      closeDialog();
     });
     document.getElementById('confirm-del').addEventListener('click', () => {
-      if (pendingDeleteIndex !== null) {
-        songs.splice(pendingDeleteIndex, 1);
-        save();
-        updateStats();
-        render();
-        showToast('Song removed');
+      if (pendingDeleteIndex === 'all') {
+        songs = [];
+        if (save()) {
+          refresh();
+          showToast('All suggestions cleared');
+        }
+        closeDialog();
+        return;
       }
-      document.getElementById('overlay').classList.remove('open');
-      pendingDeleteIndex = null;
+
+      if (Number.isInteger(pendingDeleteIndex) && pendingDeleteIndex >= 0) {
+        songs.splice(pendingDeleteIndex, 1);
+        if (save()) {
+          refresh();
+          showToast('Song removed');
+        }
+      }
+      closeDialog();
     });
 
     // Clear all
@@ -535,19 +577,6 @@
       if (songs.length === 0) return;
       pendingDeleteIndex = 'all';
       document.getElementById('overlay').classList.add('open');
-    });
-    // Override confirm for clear-all
-    document.getElementById('confirm-del').addEventListener('click', () => {
-      // handled above — pendingDeleteIndex = 'all' falls through splice(null) harmlessly
-      if (pendingDeleteIndex === 'all') {
-        songs = [];
-        save();
-        updateStats();
-        render();
-        showToast('All suggestions cleared');
-        document.getElementById('overlay').classList.remove('open');
-        pendingDeleteIndex = null;
-      }
     });
 
     // Export CSV

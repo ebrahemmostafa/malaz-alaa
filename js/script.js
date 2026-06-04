@@ -297,11 +297,20 @@
       var val = input ? input.value.trim() : '';
       if (!val) return;
 
-      // Save to localStorage
+      // Save to localStorage for the responses page on the same browser/origin.
       var songs = [];
-      try { songs = JSON.parse(localStorage.getItem('wedding_songs') || '[]'); } catch (err) { songs = []; }
+      try {
+        songs = JSON.parse(localStorage.getItem('wedding_songs') || '[]');
+        if (!Array.isArray(songs)) songs = [];
+      } catch (err) {
+        songs = [];
+      }
       songs.push({ song: val, timestamp: Date.now() });
-      localStorage.setItem('wedding_songs', JSON.stringify(songs));
+      try {
+        localStorage.setItem('wedding_songs', JSON.stringify(songs));
+      } catch (err) {
+        return;
+      }
 
       btn.disabled = true;
       label.textContent = 'SENDING...';
