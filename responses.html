@@ -408,16 +408,11 @@
     <p>made with love · <a href="index.html">← back to invitation</a></p>
   </footer>
 
+  <script src="js/song-store.js"></script>
   <script>
-    // ─── Storage key ───────────────────────────────────────────────────────────
-    // The playlist form in js/script.js must save with this EXACT key:
-    //   localStorage.setItem('wedding_songs', JSON.stringify(songs))
-    // Each entry: { song: "Title — Artist", timestamp: Date.now() }
-    // ───────────────────────────────────────────────────────────────────────────
-    const STORAGE_KEY = 'wedding_songs';
-
     let songs = [];
     let pendingDeleteIndex = null;
+    let isBusy = false;
 
     // ─── Load ───────────────────────────────────────────────────────────────────
     function normalizeSongs(value) {
@@ -439,26 +434,24 @@
       }, []);
     }
 
-    function load() {
+    async function load() {
+      if (isBusy || !window.SongStore) return;
+      isBusy = true;
       try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        songs = normalizeSongs(raw ? JSON.parse(raw) : []);
-      } catch { songs = []; }
-    }
-
-    function save() {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(songs));
-        return true;
-      } catch {
-        showToast('Could not save changes');
-        return false;
+        const raw = await window.SongStore.list();
+        songs = normalizeSongs(raw);
+        updateStats();
+        render();
+      } catch (err) {
+        console.error('Load failed:', err);
+        showToast('Could not load songs');
+      } finally {
+        isBusy = false;
       }
     }
 
-    function refresh() {
-      updateStats();
-      render();
+    async function refresh() {
+      await load();
     }
 
     // ─── Stats ──────────────────────────────────────────────────────────────────
@@ -551,22 +544,30 @@
     document.getElementById('cancel-del').addEventListener('click', () => {
       closeDialog();
     });
-    document.getElementById('confirm-del').addEventListener('click', () => {
+    document.getElementById('confirm-del').addEventListener('click', async () => {
       if (pendingDeleteIndex === 'all') {
-        songs = [];
-        if (save()) {
+        if (!window.SongStore) return closeDialog();
+        try {
+          await window.SongStore.clear();
+          songs = [];
           refresh();
           showToast('All suggestions cleared');
+        } catch (e) {
+          showToast('Failed to clear');
         }
         closeDialog();
         return;
       }
 
       if (Number.isInteger(pendingDeleteIndex) && pendingDeleteIndex >= 0) {
-        songs.splice(pendingDeleteIndex, 1);
-        if (save()) {
+        if (!window.SongStore) return closeDialog();
+        try {
+          await window.SongStore.remove(pendingDeleteIndex);
+          songs.splice(pendingDeleteIndex, 1);
           refresh();
           showToast('Song removed');
+        } catch(e) {
+           showToast('Failed to remove');
         }
       }
       closeDialog();
@@ -608,10 +609,8 @@
     // ─── Poll for live updates ────────────────────────────────────────────────
     // Re-renders automatically if a guest submits on another tab
     setInterval(() => {
-      const prev = songs.length;
       load();
-      if (songs.length !== prev) { updateStats(); render(); }
-    }, 3000);
+    }, 10000);
 
     // ─── Init ────────────────────────────────────────────────────────────────────
     load();
