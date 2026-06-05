@@ -48,7 +48,7 @@
       return fetch(BASE_URL, {
         method: 'PUT',
         headers: headers(),
-        body: JSON.stringify(songs)
+        body: JSON.stringify(songs.length ? songs : { empty: true })
       }).then(function (res) {
         if (!res.ok) throw new Error('Failed to save song (' + res.status + ')');
       });
@@ -63,7 +63,7 @@
         return fetch(BASE_URL, {
           method: 'PUT',
           headers: headers(),
-          body: JSON.stringify(songs)
+          body: JSON.stringify(songs.length ? songs : { empty: true })
         }).then(function (res) {
           if (!res.ok) throw new Error('Failed to remove song (' + res.status + ')');
         });
@@ -76,7 +76,7 @@
     return fetch(BASE_URL, {
       method: 'PUT',
       headers: headers(),
-      body: JSON.stringify([])
+      body: JSON.stringify({ empty: true })
     }).then(function (res) {
       if (!res.ok) throw new Error('Failed to clear songs (' + res.status + ')');
     });
